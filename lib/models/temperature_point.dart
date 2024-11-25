@@ -1,3 +1,4 @@
+// lib/models/temperature_point.dart
 class TemperaturePoint {
   int time; // 分钟
   int temperature; // 摄氏度
