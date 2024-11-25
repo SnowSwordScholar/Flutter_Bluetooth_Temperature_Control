@@ -23,10 +23,12 @@ class DeviceProvider with ChangeNotifier {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? deviceId = prefs.getString('selected_device_id');
     if (deviceId != null) {
+      // 等待设备扫描完成后设置已选择的设备
       await Future.delayed(const Duration(seconds: 5));
       Device? device = _availableDevices.firstWhere(
-          (device) => device.id == deviceId,
-          orElse: () => Device(id: deviceId, name: "未知设备"));
+        (device) => device.id == deviceId,
+        orElse: () => Device(id: deviceId, name: "未知设备"),
+      );
       _selectedDevice = device;
       notifyListeners();
     }
@@ -38,7 +40,10 @@ class DeviceProvider with ChangeNotifier {
       FlutterBluePlus.startScan(timeout: const Duration(seconds: 4));
       FlutterBluePlus.scanResults.listen((results) {
         _availableDevices = results
-            .map((r) => Device(id: r.device.id.id, name: r.device.name))
+            .map((r) => Device(
+                  id: r.device.remoteId.str,
+                  name: r.device.platformName.isNotEmpty ? r.device.platformName : "未知设备",
+                ))
             .toList();
         notifyListeners();
       });

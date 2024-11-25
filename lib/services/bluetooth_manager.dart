@@ -11,12 +11,12 @@ class BluetoothManager {
   // 回调函数，用于传递接收到的数据
   Function(Map<String, dynamic>)? onDataReceived;
 
-  // 检查蓝牙是否可用
-  Future<bool> isBluetoothAvailable() async {
+  // 检查蓝牙是否支持
+  Future<bool> isBluetoothSupported() async {
     try {
-      return await FlutterBluePlus.isAvailable;
+      return await FlutterBluePlus.isSupported;
     } catch (e) {
-      _logger.e("检查蓝牙可用性时出错: $e");
+      _logger.e("检查蓝牙支持性时出错: $e");
       return false;
     }
   }
@@ -24,7 +24,10 @@ class BluetoothManager {
   // 检查蓝牙是否已开启
   Future<bool> isBluetoothOn() async {
     try {
-      return await FlutterBluePlus.isOn;
+      // 获取适配器状态
+      Stream<BluetoothAdapterState> stateStream = FlutterBluePlus.adapterState;
+      BluetoothAdapterState state = await stateStream.first;
+      return state == BluetoothAdapterState.on;
     } catch (e) {
       _logger.e("检查蓝牙状态时出错: $e");
       return false;
@@ -39,7 +42,7 @@ class BluetoothManager {
       // 监听扫描结果
       FlutterBluePlus.scanResults.listen((results) {
         for (ScanResult r in results) {
-          _logger.i("发现设备: ${r.device.name} - ${r.device.id.id}");
+          _logger.i("发现设备: ${r.device.platformName.isNotEmpty ? r.device.platformName : "未知设备"} - ${r.device.remoteId.str}");
         }
       });
     } catch (e) {
@@ -61,15 +64,20 @@ class BluetoothManager {
   Future<void> connectToDevice(String deviceId) async {
     try {
       _logger.i("尝试连接设备: $deviceId");
-      List<BluetoothDevice> devices = await FlutterBluePlus.connectedDevices;
-      for (var device in devices) {
-        if (device.id.id == deviceId) {
-          _connectedDevice = device;
-          await _discoverServices();
-          return;
-        }
-      }
-      throw Exception("设备未找到");
+      // 获取所有已连接的设备
+      List<BluetoothDevice> connectedDevices = await FlutterBluePlus.connectedDevices;
+      // 查找目标设备
+      _connectedDevice = connectedDevices.firstWhere(
+        (device) => device.remoteId.str == deviceId,
+        orElse: () => throw Exception("设备未找到"),
+      );
+
+      // 连接设备
+      await _connectedDevice!.connect(autoConnect: false);
+      _logger.i("已连接到设备: ${_connectedDevice!.platformName.isNotEmpty ? _connectedDevice!.platformName : "未知设备"}");
+
+      // 发现服务和特征
+      await _discoverServices();
     } catch (e) {
       _logger.e("连接设备时出错: $e");
     }
@@ -88,7 +96,7 @@ class BluetoothManager {
           }
           if (characteristic.properties.notify) {
             await characteristic.setNotifyValue(true);
-            characteristic.value.listen((value) {
+            characteristic.lastValueStream.listen((value) {
               _logger.i("收到的数据: $value");
               String jsonString = utf8.decode(value);
               try {

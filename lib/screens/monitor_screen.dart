@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 import '../providers/temperature_provider.dart';
 
 class MonitorScreen extends StatelessWidget {
-  const MonitorScreen({Key? key}) : super(key: key); // 添加 key 参数
+  const MonitorScreen({super.key}); // 使用 super 参数
 
   @override
   Widget build(BuildContext context) {
@@ -38,7 +38,7 @@ class MonitorScreen extends StatelessWidget {
               '运行时间: ${tempProvider.runtime} 分钟',
               style: const TextStyle(fontSize: 20),
             ),
-            if (tempProvider.isRunning)
+            if (tempProvider.remainingTime > 0)
               Column(
                 children: [
                   const SizedBox(height: 20),

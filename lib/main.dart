@@ -27,7 +27,7 @@ void main() {
 }
 
 class MyApp extends StatefulWidget {
-  const MyApp({Key? key}) : super(key: key); // 添加 key 参数
+  const MyApp({super.key}); // 使用 super 参数
 
   @override
   State<MyApp> createState() => _MyAppState();

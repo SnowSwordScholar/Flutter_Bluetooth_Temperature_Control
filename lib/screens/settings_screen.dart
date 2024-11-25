@@ -5,14 +5,13 @@ import '../providers/temperature_provider.dart';
 import '../models/temperature_point.dart';
 
 class SettingsScreen extends StatelessWidget {
-  const SettingsScreen({Key? key}) : super(key: key); // 添加 key 参数
+  const SettingsScreen({super.key}); // 使用 super 参数
 
   @override
   Widget build(BuildContext context) {
     final tempProvider = Provider.of<TemperatureProvider>(context);
     final TextEditingController timeController = TextEditingController();
     final TextEditingController tempController = TextEditingController();
-    final TextEditingController durationController = TextEditingController();
 
     return Scaffold(
       appBar: AppBar(
@@ -40,7 +39,7 @@ class SettingsScreen extends StatelessWidget {
                       final point = tempProvider.temperaturePoints[index];
                       return ListTile(
                         title: Text('时间: ${point.time} 分钟'),
-                        subtitle: Text('温度: ${point.temperature} °C\n持续时间: ${point.duration} 秒'),
+                        subtitle: Text('温度: ${point.temperature} °C'),
                         trailing: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
@@ -54,8 +53,6 @@ class SettingsScreen extends StatelessWidget {
                                         TextEditingController(text: point.time.toString());
                                     final TextEditingController editTempController =
                                         TextEditingController(text: point.temperature.toString());
-                                    final TextEditingController editDurationController =
-                                        TextEditingController(text: point.duration.toString());
                                     return AlertDialog(
                                       title: const Text('编辑温控点'),
                                       content: Column(
@@ -71,11 +68,6 @@ class SettingsScreen extends StatelessWidget {
                                             decoration: const InputDecoration(labelText: '温度 (°C)'),
                                             keyboardType: TextInputType.number,
                                           ),
-                                          TextField(
-                                            controller: editDurationController,
-                                            decoration: const InputDecoration(labelText: '持续时间 (秒)'),
-                                            keyboardType: TextInputType.number,
-                                          ),
                                         ],
                                       ),
                                       actions: [
@@ -89,16 +81,12 @@ class SettingsScreen extends StatelessWidget {
                                           onPressed: () {
                                             int? newTime = int.tryParse(editTimeController.text);
                                             int? newTemp = int.tryParse(editTempController.text);
-                                            int? newDuration = int.tryParse(editDurationController.text);
-                                            if (newTime != null &&
-                                                newTemp != null &&
-                                                newDuration != null) {
+                                            if (newTime != null && newTemp != null) {
                                               tempProvider.editTemperaturePoint(
                                                   index,
                                                   TemperaturePoint(
                                                       time: newTime,
-                                                      temperature: newTemp,
-                                                      duration: newDuration));
+                                                      temperature: newTemp));
                                               Navigator.of(context).pop();
                                             }
                                           },
@@ -137,23 +125,16 @@ class SettingsScreen extends StatelessWidget {
                   decoration: const InputDecoration(labelText: '温度 (°C)'),
                   keyboardType: TextInputType.number,
                 ),
-                TextField(
-                  controller: durationController,
-                  decoration: const InputDecoration(labelText: '持续时间 (秒)'),
-                  keyboardType: TextInputType.number,
-                ),
                 const SizedBox(height: 10),
                 ElevatedButton(
                   onPressed: () {
                     int? time = int.tryParse(timeController.text);
                     int? temp = int.tryParse(tempController.text);
-                    int? duration = int.tryParse(durationController.text);
-                    if (time != null && temp != null && duration != null) {
+                    if (time != null && temp != null) {
                       tempProvider.addTemperaturePoint(
-                          TemperaturePoint(time: time, temperature: temp, duration: duration));
+                          TemperaturePoint(time: time, temperature: temp));
                       timeController.clear();
                       tempController.clear();
-                      durationController.clear();
                     }
                   },
                   child: const Text('添加温控点'),
