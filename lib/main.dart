@@ -2,17 +2,24 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'providers/temperature_provider.dart';
+import 'providers/device_provider.dart'; // 导入
 import 'screens/home_screen.dart';
 import 'screens/settings_screen.dart';
 import 'screens/monitor_screen.dart';
+import 'screens/device_management_screen.dart'; // 导入
 import 'utils/permissions.dart';
-import 'package:permission_handler/permission_handler.dart'; // 确保导入
+import 'package:permission_handler/permission_handler.dart';
 
 void main() {
   runApp(
     MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (_) => TemperatureProvider()),
+        ChangeNotifierProvider(create: (_) => DeviceProvider()), // 添加 DeviceProvider
+        ChangeNotifierProxyProvider<DeviceProvider, TemperatureProvider>(
+          create: (_) => TemperatureProvider(),
+          update: (_, deviceProvider, temperatureProvider) =>
+              temperatureProvider!..connectToSelectedDevice(deviceProvider),
+        ),
       ],
       child: const MyApp(),
     ),
@@ -89,6 +96,7 @@ class _MyAppState extends State<MyApp> {
       routes: {
         '/settings': (context) => const SettingsScreen(),
         '/monitor': (context) => const MonitorScreen(),
+        '/device_management': (context) => const DeviceManagementScreen(), // 添加路由
       },
     );
   }

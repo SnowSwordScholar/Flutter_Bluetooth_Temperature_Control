@@ -35,12 +35,11 @@ class BluetoothManager {
   Future<void> startScan() async {
     try {
       // 开始扫描
-      await FlutterBluePlus.startScan(timeout: const Duration(seconds: 4));
+      FlutterBluePlus.startScan(timeout: const Duration(seconds: 4));
       // 监听扫描结果
-      FlutterBluePlus.scanResults.listen((results) async {
+      FlutterBluePlus.scanResults.listen((results) {
         for (ScanResult r in results) {
           _logger.i("发现设备: ${r.device.name} - ${r.device.id.id}");
-          // 您可以在此处添加设备连接逻辑
         }
       });
     } catch (e) {
@@ -51,7 +50,7 @@ class BluetoothManager {
   // 停止扫描
   Future<void> stopScan() async {
     try {
-      await FlutterBluePlus.stopScan();
+      FlutterBluePlus.stopScan();
       _logger.i("已停止扫描.");
     } catch (e) {
       _logger.e("停止扫描时出错: $e");
@@ -90,7 +89,6 @@ class BluetoothManager {
           if (characteristic.properties.notify) {
             await characteristic.setNotifyValue(true);
             characteristic.value.listen((value) {
-              // 处理接收到的数据
               _logger.i("收到的数据: $value");
               String jsonString = utf8.decode(value);
               try {

@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/temperature_provider.dart';
+import '../providers/device_provider.dart'; // 导入
 import '../utils/permissions.dart';
 
 class HomeScreen extends StatelessWidget {
@@ -10,9 +11,19 @@ class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tempProvider = Provider.of<TemperatureProvider>(context);
+    final deviceProvider = Provider.of<DeviceProvider>(context);
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('温控管理'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.devices),
+            onPressed: () {
+              Navigator.pushNamed(context, '/device_management');
+            },
+          ),
+        ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
