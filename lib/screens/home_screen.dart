@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:bluetooth_temperature_control/providers/temperature_provider.dart';
 
 class HomeScreen extends StatelessWidget {
-  const HomeScreen({super.key}); // 使用 super 参数
+  const HomeScreen({super.key});
 
   void _startRun(BuildContext context) {
     final temperatureProvider = Provider.of<TemperatureProvider>(context, listen: false);
@@ -59,7 +59,8 @@ class HomeScreen extends StatelessWidget {
                     ElevatedButton(
                       onPressed: (temperatureProvider.isConnected &&
                               temperatureProvider.temperaturePoints.isNotEmpty &&
-                              temperatureProvider.verificationPassed)
+                              temperatureProvider.verificationPassed &&
+                              temperatureProvider.temperaturePointsLoaded)
                           ? () => _startRun(context)
                           : null,
                       child: const Text('开始运行'),

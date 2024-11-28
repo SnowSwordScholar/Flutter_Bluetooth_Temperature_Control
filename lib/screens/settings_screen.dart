@@ -26,6 +26,11 @@ class SettingsScreen extends StatelessWidget {
     }
   }
 
+  void _requestDataAgain(BuildContext context) {
+    final temperatureProvider = Provider.of<TemperatureProvider>(context, listen: false);
+    temperatureProvider.requestTemperaturePoints();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -40,52 +45,86 @@ class SettingsScreen extends StatelessWidget {
       ),
       body: Consumer<TemperatureProvider>(
         builder: (context, temperatureProvider, child) {
-          return ListView.builder(
-            itemCount: temperatureProvider.temperaturePoints.length,
-            itemBuilder: (context, index) {
-              final point = temperatureProvider.temperaturePoints[index];
-              return ListTile(
-                title: Text('温控点 ${index + 1}'),
-                subtitle: Row(
-                  children: [
-                    Expanded(
-                      child: TextFormField(
-                        initialValue: point.time.toString(),
-                        decoration: const InputDecoration(labelText: '时间 (分钟)'),
-                        keyboardType: TextInputType.number,
-                        onChanged: (value) {
-                          final newTime = int.tryParse(value) ?? point.time;
-                          temperatureProvider.editTemperaturePoint(
-                            index,
-                            TemperaturePoint(time: newTime, temperature: point.temperature),
-                          );
+          // 如果数据请求失败，弹出提示框
+          if (temperatureProvider.dataRequestFailed) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              showDialog(
+                context: context,
+                builder: (BuildContext context) {
+                  return AlertDialog(
+                    title: const Text('数据加载失败'),
+                    content: const Text('未能从设备加载温控点数据。是否重试？'),
+                    actions: [
+                      TextButton(
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                          _requestDataAgain(context);
                         },
+                        child: const Text('重试'),
                       ),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: TextFormField(
-                        initialValue: point.temperature.toString(),
-                        decoration: const InputDecoration(labelText: '温度 (°C)'),
-                        keyboardType: TextInputType.number,
-                        onChanged: (value) {
-                          final newTemp = int.tryParse(value) ?? point.temperature;
-                          temperatureProvider.editTemperaturePoint(
-                            index,
-                            TemperaturePoint(time: point.time, temperature: newTemp),
-                          );
+                      TextButton(
+                        onPressed: () {
+                          Navigator.of(context).pop();
                         },
+                        child: const Text('取消'),
                       ),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.delete, color: Colors.red),
-                      onPressed: () => temperatureProvider.removeTemperaturePoint(index),
-                    ),
-                  ],
-                ),
+                    ],
+                  );
+                },
               );
-            },
-          );
+            });
+          }
+
+          return temperatureProvider.temperaturePointsLoaded
+              ? ListView.builder(
+                  itemCount: temperatureProvider.temperaturePoints.length,
+                  itemBuilder: (context, index) {
+                    final point = temperatureProvider.temperaturePoints[index];
+                    return ListTile(
+                      title: Text('温控点 ${index + 1}'),
+                      subtitle: Row(
+                        children: [
+                          Expanded(
+                            child: TextFormField(
+                              initialValue: point.time.toString(),
+                              decoration: const InputDecoration(labelText: '时间 (分钟)'),
+                              keyboardType: TextInputType.number,
+                              onChanged: (value) {
+                                final newTime = int.tryParse(value) ?? point.time;
+                                temperatureProvider.editTemperaturePoint(
+                                  index,
+                                  TemperaturePoint(time: newTime, temperature: point.temperature),
+                                );
+                              },
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: TextFormField(
+                              initialValue: point.temperature.toString(),
+                              decoration: const InputDecoration(labelText: '温度 (°C)'),
+                              keyboardType: TextInputType.number,
+                              onChanged: (value) {
+                                final newTemp = int.tryParse(value) ?? point.temperature;
+                                temperatureProvider.editTemperaturePoint(
+                                  index,
+                                  TemperaturePoint(time: point.time, temperature: newTemp),
+                                );
+                              },
+                            ),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.delete, color: Colors.red),
+                            onPressed: () => temperatureProvider.removeTemperaturePoint(index),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                )
+              : const Center(
+                  child: CircularProgressIndicator(),
+                );
         },
       ),
       floatingActionButton: FloatingActionButton(

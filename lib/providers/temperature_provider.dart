@@ -21,6 +21,14 @@ class TemperatureProvider with ChangeNotifier {
   int _remainingTime = 0;
   bool _verificationPassed = false; // 添加验证状态
 
+  bool _temperaturePointsLoaded = false;
+  bool get temperaturePointsLoaded => _temperaturePointsLoaded;
+
+  bool _dataRequestFailed = false;
+  bool get dataRequestFailed => _dataRequestFailed;
+
+  Timer? _dataTimeoutTimer;
+
   bool get isRunning => _isRunning;
   bool get isConnected => _isConnected;
   List<TemperaturePoint> get temperaturePoints => List.unmodifiable(_temperaturePoints);
@@ -39,10 +47,22 @@ class TemperatureProvider with ChangeNotifier {
       try {
         await deviceProvider.connectToSelectedDevice();
         _isConnected = true;
+        _temperaturePointsLoaded = false;
+        _dataRequestFailed = false;
         notifyListeners();
 
-        // 连接后请求温度数据
+        // 连接后请求温度数据（尽管设备会自动发送）
         await retrieveTemperatureData();
+
+        // 启动超时定时器
+        _dataTimeoutTimer?.cancel();
+        _dataTimeoutTimer = Timer(const Duration(seconds: 5), () {
+          if (!_temperaturePointsLoaded) {
+            _logger.w("温控点数据未在预期时间内收到");
+            _dataRequestFailed = true;
+            notifyListeners();
+          }
+        });
       } catch (e) {
         _logger.e("连接到设备时出错: $e");
         throw Exception("连接到设备时出错: $e");
@@ -52,7 +72,7 @@ class TemperatureProvider with ChangeNotifier {
     }
   }
 
-  // 请求设备发送已有的温度数据
+  // 请求设备发送已有的温度数据（可选，因为设备会自动发送）
   Future<void> retrieveTemperatureData() async {
     try {
       Map<String, dynamic> request = {
@@ -91,6 +111,9 @@ class TemperatureProvider with ChangeNotifier {
       for (var point in points) {
         _temperaturePoints.add(TemperaturePoint.fromJson(point));
       }
+      _temperaturePointsLoaded = true;
+      _dataRequestFailed = false;
+      _dataTimeoutTimer?.cancel();
       notifyListeners();
     } else if (data['command'] == 'run_status') {
       String status = data['status'];
@@ -246,11 +269,40 @@ class TemperatureProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  // 请求重新发送温控点数据
+  Future<void> requestTemperaturePoints() async {
+    try {
+      Map<String, dynamic> request = {
+        "command": "get_temperature_points",
+      };
+      await _bluetoothManager!.sendData(request);
+      _logger.i("已发送重新请求温控点数据");
+
+      // 重置标志位
+      _temperaturePointsLoaded = false;
+      _dataRequestFailed = false;
+      notifyListeners();
+
+      // 重新启动超时定时器
+      _dataTimeoutTimer?.cancel();
+      _dataTimeoutTimer = Timer(const Duration(seconds: 5), () {
+        if (!_temperaturePointsLoaded) {
+          _logger.w("重新请求温控点数据后仍未收到数据");
+          _dataRequestFailed = true;
+          notifyListeners();
+        }
+      });
+    } catch (e) {
+      _logger.e("重新请求温控点数据时出错: $e");
+    }
+  }
+
   @override
   void dispose() {
     _bluetoothManager?.disconnect();
     _autoRunTimer?.cancel();
     _startupDelayTimer?.cancel();
+    _dataTimeoutTimer?.cancel();
     super.dispose();
   }
 }
