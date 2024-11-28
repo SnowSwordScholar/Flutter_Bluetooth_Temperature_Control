@@ -3,10 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/temperature_provider.dart';
 import '../providers/device_provider.dart';
-import '../utils/permissions.dart';
 
 class HomeScreen extends StatelessWidget {
-  const HomeScreen({super.key}); // 使用 super 参数
+  const HomeScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -44,48 +43,26 @@ class HomeScreen extends StatelessWidget {
               '运行时间: ${tempProvider.runtime} 分钟',
               style: const TextStyle(fontSize: 20),
             ),
-            if (tempProvider.remainingTime > 0)
-              Column(
-                children: [
-                  const SizedBox(height: 20),
-                  Text(
-                    '自动运行将在 ${tempProvider.remainingTime} 秒后开始',
-                    style: const TextStyle(fontSize: 18, color: Colors.red),
-                  ),
-                ],
-              ),
             const Spacer(),
-            Center( // Center the buttons
+            Center(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   ElevatedButton(
-                    onPressed: () async {
-                      bool granted = await Permissions.requestAllPermissions();
-                      if (granted) {
-                        Navigator.pushNamed(context, '/settings');
-                      } else {
-                        // 提示用户权限未被授予
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('需要蓝牙和位置权限才能继续')),
-                        );
-                      }
-                    },
+                    onPressed: isConnected
+                        ? () async {
+                            Navigator.pushNamed(context, '/settings');
+                          }
+                        : null, // 未连接时禁用按钮
                     child: const Text('设置温控点'),
                   ),
                   const SizedBox(height: 10),
                   ElevatedButton(
-                    onPressed: () async {
-                      bool granted = await Permissions.requestAllPermissions();
-                      if (granted) {
-                        Navigator.pushNamed(context, '/monitor');
-                      } else {
-                        // 提示用户权限未被授予
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('需要蓝牙和位置权限才能继续')),
-                        );
-                      }
-                    },
+                    onPressed: isConnected
+                        ? () {
+                            Navigator.pushNamed(context, '/monitor');
+                          }
+                        : null, // 未连接时禁用按钮
                     child: const Text('实时监控'),
                   ),
                 ],

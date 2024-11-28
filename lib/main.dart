@@ -17,8 +17,7 @@ void main() {
         ChangeNotifierProvider(create: (_) => DeviceProvider()), // 添加 DeviceProvider
         ChangeNotifierProxyProvider<DeviceProvider, TemperatureProvider>(
           create: (_) => TemperatureProvider(),
-          update: (_, deviceProvider, temperatureProvider) =>
-              temperatureProvider!..connectToSelectedDevice(deviceProvider),
+          update: (_, deviceProvider, temperatureProvider) => temperatureProvider!..connectToSelectedDevice(deviceProvider),
         ),
       ],
       child: const MyApp(),

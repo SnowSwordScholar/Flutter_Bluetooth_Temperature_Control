@@ -5,7 +5,7 @@ import '../providers/temperature_provider.dart';
 import '../models/temperature_point.dart';
 
 class SettingsScreen extends StatelessWidget {
-  const SettingsScreen({super.key}); // 使用 super 参数
+  const SettingsScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
