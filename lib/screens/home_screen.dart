@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:bluetooth_temperature_control/providers/temperature_provider.dart';
 
 class HomeScreen extends StatelessWidget {
-  const HomeScreen({Key? key}) : super(key: key);
+  const HomeScreen({super.key}); // 使用 super 参数
 
   void _startRun(BuildContext context) {
     final temperatureProvider = Provider.of<TemperatureProvider>(context, listen: false);
@@ -25,47 +25,59 @@ class HomeScreen extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.settings),
             onPressed: () {
-              Navigator.pushNamed(context, '/settings');
+              Navigator.pushNamed(context, '/settings'); // 修正路由
             },
           ),
         ],
       ),
       body: temperatureProvider.isConnected
-          ? Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                children: [
-                  Text('当前温度: ${temperatureProvider.currentTemperature}°C'),
-                  Text('运行时间: ${temperatureProvider.runtime} 分钟'),
-                  const SizedBox(height: 20),
-                  ElevatedButton(
-                    onPressed: () {
-                      Navigator.pushNamed(context, '/device_management');
-                    },
-                    child: const Text('设置温控点'),
-                  ),
-                  const SizedBox(height: 20),
-                  ElevatedButton(
-                    onPressed: (temperatureProvider.isConnected &&
-                            temperatureProvider.temperaturePoints.isNotEmpty &&
-                            temperatureProvider.verificationPassed)
-                        ? () => _startRun(context)
-                        : null,
-                    child: const Text('开始运行'),
-                  ),
-                  const SizedBox(height: 20),
-                  if (temperatureProvider.upcomingOperations.isNotEmpty)
-                    Expanded(
-                      child: ListView.builder(
-                        itemCount: temperatureProvider.upcomingOperations.length,
-                        itemBuilder: (context, index) {
-                          return ListTile(
-                            title: Text(temperatureProvider.upcomingOperations[index]),
-                          );
-                        },
-                      ),
+          ? Center( // 使用 Center 包裹 Column
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center, // 居中对齐
+                  crossAxisAlignment: CrossAxisAlignment.center, // 水平居中
+                  mainAxisSize: MainAxisSize.min, // 根据内容大小调整
+                  children: [
+                    Text(
+                      '当前温度: ${temperatureProvider.currentTemperature}°C',
+                      style: const TextStyle(fontSize: 24),
                     ),
-                ],
+                    const SizedBox(height: 10),
+                    Text(
+                      '运行时间: ${temperatureProvider.runtime} 分钟',
+                      style: const TextStyle(fontSize: 20),
+                    ),
+                    const SizedBox(height: 20),
+                    ElevatedButton(
+                      onPressed: () {
+                        Navigator.pushNamed(context, '/settings'); // 修正路由
+                      },
+                      child: const Text('设置温控点'),
+                    ),
+                    const SizedBox(height: 20),
+                    ElevatedButton(
+                      onPressed: (temperatureProvider.isConnected &&
+                              temperatureProvider.temperaturePoints.isNotEmpty &&
+                              temperatureProvider.verificationPassed)
+                          ? () => _startRun(context)
+                          : null,
+                      child: const Text('开始运行'),
+                    ),
+                    const SizedBox(height: 20),
+                    if (temperatureProvider.upcomingOperations.isNotEmpty)
+                      Expanded(
+                        child: ListView.builder(
+                          itemCount: temperatureProvider.upcomingOperations.length,
+                          itemBuilder: (context, index) {
+                            return ListTile(
+                              title: Text(temperatureProvider.upcomingOperations[index]),
+                            );
+                          },
+                        ),
+                      ),
+                  ],
+                ),
               ),
             )
           : const Center(child: Text('未连接到任何设备')),

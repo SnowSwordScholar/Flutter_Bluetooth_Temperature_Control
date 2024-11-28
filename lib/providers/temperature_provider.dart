@@ -92,6 +92,19 @@ class TemperatureProvider with ChangeNotifier {
         _temperaturePoints.add(TemperaturePoint.fromJson(point));
       }
       notifyListeners();
+    } else if (data['command'] == 'run_status') {
+      String status = data['status'];
+      String message = data['message'];
+      if (status == 'started') {
+        _logger.i("运行已开始");
+        _isRunning = true;
+        notifyListeners();
+      } else if (status == 'interrupted') {
+        _logger.i("运行已中断");
+        _isRunning = false;
+        notifyListeners();
+      }
+      // 处理其他运行状态
     }
     // 处理其他命令
   }
@@ -108,6 +121,20 @@ class TemperatureProvider with ChangeNotifier {
       // 设备会响应 "verify_temperature_points" 命令
     } catch (e) {
       _logger.e("发送温控点数据时出错: $e");
+    }
+  }
+
+  // 发送开始运行命令
+  Future<void> sendStartRunCommand() async {
+    try {
+      Map<String, dynamic> data = {
+        "command": "start_run",
+      };
+      await _bluetoothManager!.sendData(data);
+      _logger.i("已发送开始运行命令");
+      // 设备会响应 "run_status" 命令
+    } catch (e) {
+      _logger.e("发送开始运行命令时出错: $e");
     }
   }
 
@@ -145,6 +172,9 @@ class TemperatureProvider with ChangeNotifier {
       });
     }
 
+    // 发送开始运行命令
+    sendStartRunCommand();
+
     notifyListeners();
   }
 
@@ -165,7 +195,7 @@ class TemperatureProvider with ChangeNotifier {
   }
 
   // 中断当前运行
-  void interruptRun() {
+  Future<void> interruptRun() async {
     if (_isRunning) {
       _autoRunTimer?.cancel();
       _startupDelayTimer?.cancel();
@@ -177,7 +207,12 @@ class TemperatureProvider with ChangeNotifier {
       Map<String, dynamic> interruptCommand = {
         "command": "interrupt",
       };
-      _bluetoothManager!.sendData(interruptCommand);
+      try {
+        await _bluetoothManager!.sendData(interruptCommand);
+        _logger.i("已发送中断命令");
+      } catch (e) {
+        _logger.e("发送中断命令时出错: $e");
+      }
     }
   }
 

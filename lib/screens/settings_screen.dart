@@ -4,38 +4,16 @@ import 'package:provider/provider.dart';
 import 'package:bluetooth_temperature_control/providers/temperature_provider.dart';
 import 'package:bluetooth_temperature_control/models/temperature_point.dart';
 
-class SettingsScreen extends StatefulWidget {
-  const SettingsScreen({Key? key}) : super(key: key);
+class SettingsScreen extends StatelessWidget {
+  const SettingsScreen({super.key});
 
-  @override
-  State<SettingsScreen> createState() => _SettingsScreenState();
-}
-
-class _SettingsScreenState extends State<SettingsScreen> {
-  late List<TemperaturePoint> _temperaturePoints;
-
-  @override
-  void initState() {
-    super.initState();
+  void _addTemperaturePoint(BuildContext context) {
     final temperatureProvider = Provider.of<TemperatureProvider>(context, listen: false);
-    _temperaturePoints = List.from(temperatureProvider.temperaturePoints);
+    temperatureProvider.addTemperaturePoint(TemperaturePoint(time: 0, temperature: 20));
   }
 
-  void _addTemperaturePoint() {
-    setState(() {
-      _temperaturePoints.add(TemperaturePoint(time: 0, temperature: 20));
-    });
-  }
-
-  void _removeTemperaturePoint(int index) {
-    setState(() {
-      _temperaturePoints.removeAt(index);
-    });
-  }
-
-  void _saveTemperaturePoints() async {
+  void _saveTemperaturePoints(BuildContext context) async {
     final temperatureProvider = Provider.of<TemperatureProvider>(context, listen: false);
-    temperatureProvider.setTemperaturePoints(_temperaturePoints);
     try {
       await temperatureProvider.sendTemperaturePointsWithVerification();
       ScaffoldMessenger.of(context).showSnackBar(
@@ -50,67 +28,68 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final temperatureProvider = Provider.of<TemperatureProvider>(context);
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('设置温控点'),
         actions: [
           IconButton(
             icon: const Icon(Icons.save),
-            onPressed: _saveTemperaturePoints,
+            onPressed: () => _saveTemperaturePoints(context),
           ),
         ],
       ),
-      body: ListView.builder(
-        itemCount: _temperaturePoints.length,
-        itemBuilder: (context, index) {
-          return ListTile(
-            title: Text('温控点 ${index + 1}'),
-            subtitle: Row(
-              children: [
-                Expanded(
-                  child: TextFormField(
-                    initialValue: _temperaturePoints[index].time.toString(),
-                    decoration: const InputDecoration(labelText: '时间 (分钟)'),
-                    keyboardType: TextInputType.number,
-                    onChanged: (value) {
-                      setState(() {
-                        _temperaturePoints[index] = TemperaturePoint(
-                          time: int.tryParse(value) ?? _temperaturePoints[index].time,
-                          temperature: _temperaturePoints[index].temperature,
-                        );
-                      });
-                    },
-                  ),
+      body: Consumer<TemperatureProvider>(
+        builder: (context, temperatureProvider, child) {
+          return ListView.builder(
+            itemCount: temperatureProvider.temperaturePoints.length,
+            itemBuilder: (context, index) {
+              final point = temperatureProvider.temperaturePoints[index];
+              return ListTile(
+                title: Text('温控点 ${index + 1}'),
+                subtitle: Row(
+                  children: [
+                    Expanded(
+                      child: TextFormField(
+                        initialValue: point.time.toString(),
+                        decoration: const InputDecoration(labelText: '时间 (分钟)'),
+                        keyboardType: TextInputType.number,
+                        onChanged: (value) {
+                          final newTime = int.tryParse(value) ?? point.time;
+                          temperatureProvider.editTemperaturePoint(
+                            index,
+                            TemperaturePoint(time: newTime, temperature: point.temperature),
+                          );
+                        },
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: TextFormField(
+                        initialValue: point.temperature.toString(),
+                        decoration: const InputDecoration(labelText: '温度 (°C)'),
+                        keyboardType: TextInputType.number,
+                        onChanged: (value) {
+                          final newTemp = int.tryParse(value) ?? point.temperature;
+                          temperatureProvider.editTemperaturePoint(
+                            index,
+                            TemperaturePoint(time: point.time, temperature: newTemp),
+                          );
+                        },
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.delete, color: Colors.red),
+                      onPressed: () => temperatureProvider.removeTemperaturePoint(index),
+                    ),
+                  ],
                 ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: TextFormField(
-                    initialValue: _temperaturePoints[index].temperature.toString(),
-                    decoration: const InputDecoration(labelText: '温度 (°C)'),
-                    keyboardType: TextInputType.number,
-                    onChanged: (value) {
-                      setState(() {
-                        _temperaturePoints[index] = TemperaturePoint(
-                          time: _temperaturePoints[index].time,
-                          temperature: int.tryParse(value) ?? _temperaturePoints[index].temperature,
-                        );
-                      });
-                    },
-                  ),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.delete, color: Colors.red),
-                  onPressed: () => _removeTemperaturePoint(index),
-                ),
-              ],
-            ),
+              );
+            },
           );
         },
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: _addTemperaturePoint,
+        onPressed: () => _addTemperaturePoint(context),
         child: const Icon(Icons.add),
       ),
     );
