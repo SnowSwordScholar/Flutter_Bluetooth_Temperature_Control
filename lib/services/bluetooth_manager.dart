@@ -10,36 +10,30 @@ class BluetoothManager with ChangeNotifier {
   BluetoothDevice? _connectedDevice;
   BluetoothCharacteristic? _writeCharacteristic;
   BluetoothCharacteristic? _notifyCharacteristic;
-  bool _isConnected = false; // 声明 _isConnected 变量
+  bool _isConnected = false;
 
-  // 回调函数，用于传递接收到的数据
   Function(Map<String, dynamic>)? onDataReceived;
 
-  // 定义服务UUID和特征UUID（使用 lowerCamelCase）
   final String serviceUuid = "12345678-1234-1234-1234-1234567890ab";
   final String characteristicUuid = "abcdefab-1234-5678-1234-abcdefabcdef";
 
   bool get isConnected => _isConnected;
 
-  // 扫描并连接到设备
   Future<void> connectToDevice(String deviceId) async {
     try {
       _logger.i("开始扫描设备...");
 
-      // 开始扫描，不过滤任何服务以便调试
       FlutterBluePlus.startScan(
         timeout: const Duration(seconds: 10),
         withServices: [],
       );
 
-      // 声明 scanSubscription 变量
       late StreamSubscription<List<ScanResult>> scanSubscription;
 
-      // 监听扫描结果
       scanSubscription = FlutterBluePlus.scanResults.listen((results) async {
         for (ScanResult r in results) {
-          String deviceName = r.device.platformName; // 使用 platformName
-          String deviceIdStr = r.device.id.id; // 使用 id.id
+          String deviceName = r.device.name; // 修改为 r.device.name
+          String deviceIdStr = r.device.id.id;
 
           _logger.i("扫描到设备: $deviceName ($deviceIdStr)");
 
@@ -47,13 +41,12 @@ class BluetoothManager with ChangeNotifier {
             _logger.i("找到目标设备: $deviceName ($deviceIdStr)");
             FlutterBluePlus.stopScan();
             await _connect(r.device);
-            await scanSubscription.cancel(); // 正确引用已声明的变量
+            await scanSubscription.cancel();
             break;
           }
         }
       });
 
-      // 等待扫描完成
       await FlutterBluePlus.isScanning.firstWhere((isScanning) => !isScanning);
     } catch (e) {
       _logger.e("连接设备时出错: $e");
@@ -61,14 +54,12 @@ class BluetoothManager with ChangeNotifier {
     }
   }
 
-  // 连接到设备并发现服务
   Future<void> _connect(BluetoothDevice device) async {
     try {
       _connectedDevice = device;
       await _connectedDevice!.connect(autoConnect: false);
-      _logger.i("已连接到设备: ${_connectedDevice!.platformName}");
+      _logger.i("已连接到设备: ${_connectedDevice!.name}");
 
-      // 设置连接状态监听
       _connectedDevice!.connectionState.listen((state) {
         if (state == BluetoothConnectionState.disconnected) {
           _logger.w("设备已断开连接");
@@ -79,7 +70,6 @@ class BluetoothManager with ChangeNotifier {
         }
       });
 
-      // 发现服务
       List<BluetoothService> services = await _connectedDevice!.discoverServices();
       for (BluetoothService service in services) {
         _logger.i("发现服务: ${service.uuid}");
@@ -97,7 +87,7 @@ class BluetoothManager with ChangeNotifier {
             if (characteristic.properties.notify) {
               _notifyCharacteristic = characteristic;
               await characteristic.setNotifyValue(true);
-              characteristic.lastValueStream.listen((value) { // 使用 lastValueStream
+              characteristic.value.listen((value) { // 使用 value 而不是 lastValueStream
                 _logger.i("收到通知数据: $value");
                 String jsonString = utf8.decode(value);
                 try {
@@ -124,7 +114,7 @@ class BluetoothManager with ChangeNotifier {
       }
 
       _isConnected = true;
-      notifyListeners(); // 通知连接状态变化
+      notifyListeners();
       _logger.i("设备连接和服务发现完成");
     } catch (e) {
       _logger.e("连接或服务发现时出错: $e");
@@ -132,7 +122,6 @@ class BluetoothManager with ChangeNotifier {
     }
   }
 
-  // 发送数据
   Future<void> sendData(Map<String, dynamic> data) async {
     try {
       if (_writeCharacteristic == null) {
@@ -141,14 +130,13 @@ class BluetoothManager with ChangeNotifier {
       String jsonString = jsonEncode(data);
       List<int> bytes = utf8.encode(jsonString);
 
-      // BLE单次写入的最大字节数（根据设备和平台，通常为512字节）
       const int maxChunkSize = 500;
 
       for (int i = 0; i < bytes.length; i += maxChunkSize) {
         int end = (i + maxChunkSize < bytes.length) ? i + maxChunkSize : bytes.length;
         List<int> chunk = bytes.sublist(i, end);
-        await _writeCharacteristic!.write(chunk, withoutResponse: true);
-        await Future.delayed(const Duration(milliseconds: 50)); // 避免发送过快
+        await _writeCharacteristic!.write(chunk, withoutResponse: false); // 确保写入有响应
+        await Future.delayed(const Duration(milliseconds: 50));
       }
       _logger.i("数据已发送: ${jsonString.length} 字节");
     } catch (e) {
@@ -157,7 +145,6 @@ class BluetoothManager with ChangeNotifier {
     }
   }
 
-  // 断开连接
   Future<void> disconnect() async {
     try {
       if (_connectedDevice != null) {

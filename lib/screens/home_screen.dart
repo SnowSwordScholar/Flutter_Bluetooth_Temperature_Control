@@ -1,75 +1,79 @@
 // lib/screens/home_screen.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../providers/temperature_provider.dart';
-import '../providers/device_provider.dart';
+import 'package:bluetooth_temperature_control/providers/temperature_provider.dart';
 
 class HomeScreen extends StatelessWidget {
-  const HomeScreen({super.key});
+  const HomeScreen({Key? key}) : super(key: key);
+
+  void _startRun(BuildContext context) {
+    final temperatureProvider = Provider.of<TemperatureProvider>(context, listen: false);
+    temperatureProvider.startAutoRun();
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('开始运行')),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
-    final tempProvider = Provider.of<TemperatureProvider>(context);
-    final deviceProvider = Provider.of<DeviceProvider>(context);
-
-    // Determine connection status
-    bool isConnected = tempProvider.isConnected;
+    final temperatureProvider = Provider.of<TemperatureProvider>(context);
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('温控管理'),
         actions: [
           IconButton(
-            icon: Icon(
-              Icons.devices,
-              color: isConnected ? Colors.green : Colors.red,
-            ),
+            icon: const Icon(Icons.settings),
             onPressed: () {
-              Navigator.pushNamed(context, '/device_management');
+              Navigator.pushNamed(context, '/settings');
             },
           ),
         ],
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            Text(
-              '当前温度: ${tempProvider.currentTemperature}°C',
-              style: const TextStyle(fontSize: 24),
-            ),
-            const SizedBox(height: 20),
-            Text(
-              '运行时间: ${tempProvider.runtime} 分钟',
-              style: const TextStyle(fontSize: 20),
-            ),
-            const Spacer(),
-            Center(
+      body: temperatureProvider.isConnected
+          ? Padding(
+              padding: const EdgeInsets.all(16.0),
               child: Column(
-                mainAxisSize: MainAxisSize.min,
                 children: [
+                  Text('当前温度: ${temperatureProvider.currentTemperature}°C'),
+                  Text('运行时间: ${temperatureProvider.runtime} 分钟'),
+                  const SizedBox(height: 20),
                   ElevatedButton(
-                    onPressed: isConnected
-                        ? () async {
-                            Navigator.pushNamed(context, '/settings');
-                          }
-                        : null, // 未连接时禁用按钮
+                    onPressed: () {
+                      Navigator.pushNamed(context, '/device_management');
+                    },
                     child: const Text('设置温控点'),
                   ),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 20),
                   ElevatedButton(
-                    onPressed: isConnected
-                        ? () {
-                            Navigator.pushNamed(context, '/monitor');
-                          }
-                        : null, // 未连接时禁用按钮
-                    child: const Text('实时监控'),
+                    onPressed: (temperatureProvider.isConnected &&
+                            temperatureProvider.temperaturePoints.isNotEmpty &&
+                            temperatureProvider.verificationPassed)
+                        ? () => _startRun(context)
+                        : null,
+                    child: const Text('开始运行'),
                   ),
+                  const SizedBox(height: 20),
+                  if (temperatureProvider.upcomingOperations.isNotEmpty)
+                    Expanded(
+                      child: ListView.builder(
+                        itemCount: temperatureProvider.upcomingOperations.length,
+                        itemBuilder: (context, index) {
+                          return ListTile(
+                            title: Text(temperatureProvider.upcomingOperations[index]),
+                          );
+                        },
+                      ),
+                    ),
                 ],
               ),
-            ),
-          ],
-        ),
+            )
+          : const Center(child: Text('未连接到任何设备')),
+      floatingActionButton: FloatingActionButton(
+        child: const Icon(Icons.bluetooth),
+        onPressed: () {
+          Navigator.pushNamed(context, '/device_management');
+        },
       ),
     );
   }

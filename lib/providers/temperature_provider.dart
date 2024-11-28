@@ -19,18 +19,21 @@ class TemperatureProvider with ChangeNotifier {
   Timer? _startupDelayTimer;
   int _startupDelay = 10; // 预留的时间，秒
   int _remainingTime = 0;
+  bool _verificationPassed = false; // 添加验证状态
 
   bool get isRunning => _isRunning;
   bool get isConnected => _isConnected;
   List<TemperaturePoint> get temperaturePoints => List.unmodifiable(_temperaturePoints);
   List<String> get upcomingOperations => List.unmodifiable(_upcomingOperations);
   int get remainingTime => _remainingTime;
+  bool get verificationPassed => _verificationPassed; // 获取验证状态
 
   TemperatureProvider();
 
   // 当选择了设备后连接
   Future<void> connectToSelectedDevice(DeviceProvider deviceProvider) async {
-    if (deviceProvider.selectedDevice != null && deviceProvider.selectedDevice!.platformName == "ESP32_Temperature_Controll") {
+    if (deviceProvider.selectedDevice != null &&
+        deviceProvider.selectedDevice!.platformName == "ESP32_Temperature_Controll") {
       _bluetoothManager = deviceProvider.bluetoothManager;
       _bluetoothManager!.onDataReceived = _handleBluetoothData;
       try {
@@ -74,10 +77,12 @@ class TemperatureProvider with ChangeNotifier {
       String message = data['message'];
       if (status == 'success') {
         _logger.i("温控点验证通过");
-        // 可以在此处更新UI，例如启用“开始运行”按钮
+        _verificationPassed = true;
         notifyListeners();
       } else {
         _logger.e("温控点验证失败: $message");
+        _verificationPassed = false;
+        notifyListeners();
       }
     } else if (data['command'] == 'temperature_points') {
       // 接收到设备的温度数据
@@ -109,6 +114,10 @@ class TemperatureProvider with ChangeNotifier {
   // 启动自动运行计时器
   void startAutoRun() {
     if (_temperaturePoints.isEmpty) return;
+
+    _isRunning = true;
+    _verificationPassed = false;
+    notifyListeners();
 
     // 计算各时间点的延迟（秒）
     _upcomingOperations.clear();
@@ -162,6 +171,7 @@ class TemperatureProvider with ChangeNotifier {
       _startupDelayTimer?.cancel();
       _isRunning = false;
       _isConnected = false;
+      _verificationPassed = false;
       notifyListeners();
       // 发送中断命令到设备
       Map<String, dynamic> interruptCommand = {
@@ -191,6 +201,14 @@ class TemperatureProvider with ChangeNotifier {
       _temperaturePoints.removeAt(index);
       notifyListeners();
     }
+  }
+
+  // 设置温控点列表
+  void setTemperaturePoints(List<TemperaturePoint> points) {
+    _temperaturePoints.clear();
+    _temperaturePoints.addAll(points);
+    _verificationPassed = false;
+    notifyListeners();
   }
 
   @override

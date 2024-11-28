@@ -15,10 +15,7 @@ void main() {
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => DeviceProvider()), // 添加 DeviceProvider
-        ChangeNotifierProxyProvider<DeviceProvider, TemperatureProvider>(
-          create: (_) => TemperatureProvider(),
-          update: (_, deviceProvider, temperatureProvider) => temperatureProvider!..connectToSelectedDevice(deviceProvider),
-        ),
+        ChangeNotifierProvider(create: (_) => TemperatureProvider()), // 单独添加 TemperatureProvider
       ],
       child: const MyApp(),
     ),
