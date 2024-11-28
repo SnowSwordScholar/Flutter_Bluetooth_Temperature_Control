@@ -31,6 +31,12 @@ class SettingsScreen extends StatelessWidget {
     temperatureProvider.requestTemperaturePoints();
   }
 
+  void _skipRestore(BuildContext context) {
+    final temperatureProvider = Provider.of<TemperatureProvider>(context, listen: false);
+    temperatureProvider.skipLoadingTemperaturePoints();
+    Navigator.of(context).pop(); // 关闭对话框
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -64,7 +70,7 @@ class SettingsScreen extends StatelessWidget {
                       ),
                       TextButton(
                         onPressed: () {
-                          Navigator.of(context).pop();
+                          _skipRestore(context);
                         },
                         child: const Text('取消'),
                       ),

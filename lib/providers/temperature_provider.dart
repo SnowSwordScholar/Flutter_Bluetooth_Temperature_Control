@@ -297,6 +297,15 @@ class TemperatureProvider with ChangeNotifier {
     }
   }
 
+  // 用户选择跳过恢复环节，直接进入设置温控点
+  void skipLoadingTemperaturePoints() {
+    _temperaturePointsLoaded = true;
+    _dataRequestFailed = false;
+    _temperaturePoints.clear(); // 清空现有温控点，允许用户添加新的温控点
+    _dataTimeoutTimer?.cancel();
+    notifyListeners();
+  }
+
   @override
   void dispose() {
     _bluetoothManager?.disconnect();
