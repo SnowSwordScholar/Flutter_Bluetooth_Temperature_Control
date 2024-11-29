@@ -39,7 +39,7 @@ class SettingsScreen extends StatelessWidget {
     try {
       await temperatureProvider.sendTemperaturePointsWithVerification();
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('温控点已保存并验证')),
+        const SnackBar(content: Text('温控点已保存')),
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
