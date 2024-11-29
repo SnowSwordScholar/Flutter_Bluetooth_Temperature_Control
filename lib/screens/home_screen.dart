@@ -58,29 +58,51 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  void _showInfoDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('关于本项目'),
-          content: const Text(
-            'GitHub: https://github.com/SnowSwordScholar/Flutter_Bluetooth_Temperature_Control\n\n'
-            'SnowSwordScholar 用  ❤️ 创作\n\n'
-            '老师给我平时分打满分呗 ヾ(≧▽≦*)o',
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: const Text('关闭'),
+void _showInfoDialog(BuildContext context) {
+  showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        title: const Text('使用指南：'),
+        content: const Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start, // 确保所有文本居左对齐
+          children: <Widget>[
+            Text(
+              '等待连接：两灯交替闪烁\n'
+              '连接成功：两灯常量\n'
+              '接收成功：D5 快速闪烁\n'
+              '执行中：两灯交替呼吸\n'
+              '执行中但失去蓝牙连接：D5呼吸\n'
+              '长按三秒 BOOT 直接启动\n'
+              '长按五秒清除数据\n\n',
+
+            ),
+            Text(
+              '关于本项目\n',
+              style: TextStyle(fontWeight: FontWeight.bold), // 加粗文本
+
+            ),
+            Text(
+              'GitHub: https://github.com/SnowSwordScholar/Flutter_Bluetooth_Temperature_Control\n\n'
+              'SnowSwordScholar 用  ❤️ 创作\n\n'
+              '老师给我平时分打满分呗 ヾ(≧▽≦*)o',
+
             ),
           ],
-        );
-      },
-    );
-  }
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+            child: const Text('关闭'),
+          ),
+        ],
+      );
+    },
+  );
+}
 
   @override
   Widget build(BuildContext context) {
@@ -150,6 +172,15 @@ class _HomeScreenState extends State<HomeScreen> {
                                 ),
                               ),
                             ],
+                          ),
+                          Text(
+                            temperatureProvider.isRunning
+                                ? ''
+                                : '\n\n\n请稍等片刻，\n如果运行时间不为 0 ，\n设备仍可能在运行',
+                            style: const TextStyle(
+                              fontSize: 11,
+                              color:  Colors.red
+                            ),
                           ),
                         ],
                       ),
