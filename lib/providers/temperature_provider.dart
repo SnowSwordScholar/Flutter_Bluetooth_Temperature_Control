@@ -176,6 +176,7 @@ class TemperatureProvider with ChangeNotifier {
       // 设备会响应 "verify_temperature_points" 命令
     } catch (e) {
       logger.e("发送温控点数据时出错: $e");
+      // 可以考虑设置一个错误状态并通知 UI
     }
   }
 
@@ -289,6 +290,7 @@ class TemperatureProvider with ChangeNotifier {
     // 验证时间顺序
     if (!canAddTemperaturePoint(point.time)) {
       logger.w("温控点时间设置不正确。");
+      // 可以考虑通知 UI 失败，或在 UI 中处理
       return;
     }
     _temperaturePoints.add(point);

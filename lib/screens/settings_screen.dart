@@ -9,7 +9,14 @@ class SettingsScreen extends StatelessWidget {
 
   void _addTemperaturePoint(BuildContext context) {
     final temperatureProvider = Provider.of<TemperatureProvider>(context, listen: false);
-    temperatureProvider.addTemperaturePoint(TemperaturePoint(time: 0, temperature: 20));
+    
+    // 设置新温度点的默认时间为最后一个温度点时间 + 1
+    int defaultTime = 0;
+    if (temperatureProvider.temperaturePoints.isNotEmpty) {
+      defaultTime = temperatureProvider.temperaturePoints.last.time + 1;
+    }
+
+    temperatureProvider.addTemperaturePoint(TemperaturePoint(time: defaultTime, temperature: 20));
 
     // 检查是否添加成功
     if (temperatureProvider.temperaturePoints.isNotEmpty) {

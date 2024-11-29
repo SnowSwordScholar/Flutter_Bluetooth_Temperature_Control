@@ -26,6 +26,7 @@ class DeviceProvider with ChangeNotifier {
     String? deviceId = prefs.getString('selected_device_id'); // 保存设备ID
     if (deviceId != null) {
       // 等待设备扫描完成后设置已选择的设备
+      // 可调整等待时间或改为其他同步机制
       await Future.delayed(const Duration(seconds: 5));
       Device? device = _availableDevices.firstWhere(
         (device) => device.id == deviceId,
@@ -87,6 +88,7 @@ class DeviceProvider with ChangeNotifier {
       try {
         await _bluetoothManager.connectToDevice(_selectedDevice!.id);
         _logger.i("成功连接到设备: ${_selectedDevice!.platformName}");
+        notifyListeners();
       } catch (e) {
         _logger.e("连接设备时出错: $e");
         throw Exception("连接设备时出错: $e");
