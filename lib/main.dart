@@ -5,7 +5,6 @@ import 'providers/temperature_provider.dart';
 import 'providers/device_provider.dart'; // 导入
 import 'screens/home_screen.dart';
 import 'screens/settings_screen.dart';
-import 'screens/monitor_screen.dart';
 import 'screens/device_management_screen.dart'; // 导入
 import 'utils/permissions.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -91,7 +90,6 @@ class _MyAppState extends State<MyApp> {
             ),
       routes: {
         '/settings': (context) => const SettingsScreen(),
-        '/monitor': (context) => const MonitorScreen(),
         '/device_management': (context) => const DeviceManagementScreen(), // 添加路由
       },
     );
