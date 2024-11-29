@@ -1,10 +1,41 @@
 // lib/screens/home_screen.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:bluetooth_temperature_control/providers/temperature_provider.dart';
+import '../providers/temperature_provider.dart';
+import 'monitor_screen.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  late TemperatureProvider temperatureProvider;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    temperatureProvider = Provider.of<TemperatureProvider>(context);
+    temperatureProvider.addListener(_handleTemperatureChange);
+  }
+
+  @override
+  void dispose() {
+    temperatureProvider.removeListener(_handleTemperatureChange);
+    super.dispose();
+  }
+
+  void _handleTemperatureChange() {
+    if (temperatureProvider.isRunning) {
+      // 自动导航到 MonitorScreen
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => const MonitorScreen()),
+      );
+    }
+  }
 
   void _startRun(BuildContext context) {
     final temperatureProvider = Provider.of<TemperatureProvider>(context, listen: false);

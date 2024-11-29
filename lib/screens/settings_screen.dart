@@ -1,8 +1,8 @@
 // lib/screens/settings_screen.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:bluetooth_temperature_control/providers/temperature_provider.dart';
-import 'package:bluetooth_temperature_control/models/temperature_point.dart';
+import '../providers/temperature_provider.dart';
+import '../models/temperature_point.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -10,6 +10,21 @@ class SettingsScreen extends StatelessWidget {
   void _addTemperaturePoint(BuildContext context) {
     final temperatureProvider = Provider.of<TemperatureProvider>(context, listen: false);
     temperatureProvider.addTemperaturePoint(TemperaturePoint(time: 0, temperature: 20));
+
+    // 检查是否添加成功
+    if (temperatureProvider.temperaturePoints.isNotEmpty) {
+      final lastPoint = temperatureProvider.temperaturePoints.last;
+      if (lastPoint.time < 0 ||
+          (temperatureProvider.temperaturePoints.length > 1 &&
+              lastPoint.time <= temperatureProvider.temperaturePoints[temperatureProvider.temperaturePoints.length - 2].time)) {
+        // 显示错误提示
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('温度点时间设置不正确，请确保时间递增。')),
+        );
+        // 移除不符合要求的温控点
+        temperatureProvider.removeTemperaturePoint(temperatureProvider.temperaturePoints.length - 1);
+      }
+    }
   }
 
   void _saveTemperaturePoints(BuildContext context) async {
@@ -54,30 +69,32 @@ class SettingsScreen extends StatelessWidget {
           // 如果数据请求失败，弹出提示框
           if (temperatureProvider.dataRequestFailed) {
             WidgetsBinding.instance.addPostFrameCallback((_) {
-              showDialog(
-                context: context,
-                builder: (BuildContext context) {
-                  return AlertDialog(
-                    title: const Text('数据加载失败'),
-                    content: const Text('未能从设备加载温控点数据。是否重试？'),
-                    actions: [
-                      TextButton(
-                        onPressed: () {
-                          Navigator.of(context).pop();
-                          _requestDataAgain(context);
-                        },
-                        child: const Text('重试'),
-                      ),
-                      TextButton(
-                        onPressed: () {
-                          _skipRestore(context);
-                        },
-                        child: const Text('取消'),
-                      ),
-                    ],
-                  );
-                },
-              );
+              if (context.mounted) { // 添加 mounted 检查
+                showDialog(
+                  context: context,
+                  builder: (BuildContext context) {
+                    return AlertDialog(
+                      title: const Text('数据加载失败'),
+                      content: const Text('未能从设备加载温控点数据。是否重试？'),
+                      actions: [
+                        TextButton(
+                          onPressed: () {
+                            Navigator.of(context).pop();
+                            _requestDataAgain(context);
+                          },
+                          child: const Text('重试'),
+                        ),
+                        TextButton(
+                          onPressed: () {
+                            _skipRestore(context);
+                          },
+                          child: const Text('取消'),
+                        ),
+                      ],
+                    );
+                  },
+                );
+              }
             });
           }
 
@@ -97,10 +114,16 @@ class SettingsScreen extends StatelessWidget {
                               keyboardType: TextInputType.number,
                               onChanged: (value) {
                                 final newTime = int.tryParse(value) ?? point.time;
-                                temperatureProvider.editTemperaturePoint(
-                                  index,
-                                  TemperaturePoint(time: newTime, temperature: point.temperature),
-                                );
+                                if (temperatureProvider.canSetTemperaturePoint(index, newTime)) { // 调用公有方法
+                                  temperatureProvider.editTemperaturePoint(
+                                    index,
+                                    TemperaturePoint(time: newTime, temperature: point.temperature),
+                                  );
+                                } else {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(content: Text('温度点时间设置不正确，请确保时间递增。')),
+                                  );
+                                }
                               },
                             ),
                           ),
