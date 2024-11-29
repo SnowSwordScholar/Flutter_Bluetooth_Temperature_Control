@@ -1,4 +1,3 @@
-// lib/screens/home_screen.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/temperature_provider.dart';
@@ -31,10 +30,7 @@ class _HomeScreenState extends State<HomeScreen> {
     super.dispose();
   }
 
-  void _handleTemperatureChange() {
-    // 如果需要在运行状态变化时进行特定操作，可以在这里添加逻辑
-    // 例如，自动导航到监控页面等
-  }
+  void _handleTemperatureChange() {}
 
   void _startRun(BuildContext context) {
     if (temperatureProvider.temperaturePoints.isEmpty) {
@@ -62,6 +58,30 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  void _showInfoDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('关于本项目'),
+          content: const Text(
+            'GitHub: https://github.com/SnowSwordScholar/Flutter_Bluetooth_Temperature_Control\n\n'
+            'SnowSwordScholar 用  ❤️ 创作\n\n'
+            '老师给我平时分打满分呗 ヾ(≧▽≦*)o',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text('关闭'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final temperatureProvider = Provider.of<TemperatureProvider>(context);
@@ -69,7 +89,10 @@ class _HomeScreenState extends State<HomeScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('温控管理'),
+        title: GestureDetector(
+          onTap: () => _showInfoDialog(context),
+          child: const Text('温控管理'),
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.power_settings_new),
@@ -89,7 +112,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     children: [
                       // 占据屏幕1/3的空白区域
                       SizedBox(height: constraints.maxHeight * 0.1),
-                      
+
                       // 实时监控信息直接显示在页面上
                       Column(
                         children: [
@@ -130,7 +153,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                         ],
                       ),
-                      
+
                       const Spacer(), // 将按钮推到屏幕下部
 
                       // 按钮排列在底部
