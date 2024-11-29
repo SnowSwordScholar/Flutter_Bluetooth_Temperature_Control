@@ -14,6 +14,7 @@ class DeviceProvider with ChangeNotifier {
 
   List<Device> get availableDevices => _availableDevices;
   Device? get selectedDevice => _selectedDevice;
+  bool get isConnected => _bluetoothManager.isConnected; // 添加 isConnected
 
   DeviceProvider() {
     scanDevices();
@@ -103,6 +104,7 @@ class DeviceProvider with ChangeNotifier {
     try {
       await _bluetoothManager.disconnect();
       _logger.i("已断开设备连接");
+      notifyListeners();
     } catch (e) {
       _logger.e("断开连接时出错: $e");
       throw Exception("断开连接时出错: $e");
