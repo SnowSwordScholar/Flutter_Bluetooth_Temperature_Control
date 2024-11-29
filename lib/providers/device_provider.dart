@@ -23,20 +23,22 @@ class DeviceProvider with ChangeNotifier {
   // 加载已选择的设备
   Future<void> loadSelectedDevice() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    String? deviceName = prefs.getString('selected_device_name');
-    if (deviceName != null) {
+    String? deviceId = prefs.getString('selected_device_id'); // 保存设备ID
+    if (deviceId != null) {
       // 等待设备扫描完成后设置已选择的设备
       await Future.delayed(const Duration(seconds: 5));
       Device? device = _availableDevices.firstWhere(
-        (device) => device.platformName == deviceName,
+        (device) => device.id == deviceId,
         orElse: () => Device(id: "", platformName: "未知设备"),
       );
-      if (device.platformName != "未知设备") {
+      if (device.id.isNotEmpty) {
         _selectedDevice = device;
         notifyListeners();
         _logger.i("已加载已选择的设备: ${_selectedDevice!.platformName}");
+        // 尝试自动连接
+        await connectToSelectedDevice();
       } else {
-        _logger.w("未找到已选择的设备: $deviceName");
+        _logger.w("未找到已选择的设备: $deviceId");
       }
     }
   }
@@ -50,7 +52,7 @@ class DeviceProvider with ChangeNotifier {
         _availableDevices = results
             .map((r) => Device(
                   id: r.device.id.id,
-                  platformName: r.device.platformName.isNotEmpty ? r.device.platformName : "未知设备",
+                  platformName: r.device.name.isNotEmpty ? r.device.name : "未知设备",
                 ))
             .toList();
         notifyListeners();
@@ -65,7 +67,7 @@ class DeviceProvider with ChangeNotifier {
   Future<void> selectDevice(Device device) async {
     _selectedDevice = device;
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    await prefs.setString('selected_device_name', device.platformName);
+    await prefs.setString('selected_device_id', device.id); // 保存设备ID
     notifyListeners();
     _logger.i("已选择设备: ${device.platformName}");
   }
@@ -74,7 +76,7 @@ class DeviceProvider with ChangeNotifier {
   Future<void> clearSelectedDevice() async {
     _selectedDevice = null;
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    await prefs.remove('selected_device_name');
+    await prefs.remove('selected_device_id');
     notifyListeners();
     _logger.i("已清除选择的设备");
   }

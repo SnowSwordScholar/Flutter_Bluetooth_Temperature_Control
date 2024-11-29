@@ -39,6 +39,29 @@ class MonitorScreen extends StatelessWidget {
               style: const TextStyle(fontSize: 20),
             ),
             const SizedBox(height: 20),
+            if (tempProvider.isRunning)
+              Row(
+                children: const [
+                  Icon(Icons.play_arrow, color: Colors.green),
+                  SizedBox(width: 10),
+                  Text(
+                    '设备正在运行',
+                    style: TextStyle(fontSize: 20, color: Colors.green),
+                  ),
+                ],
+              )
+            else
+              Row(
+                children: const [
+                  Icon(Icons.pause, color: Colors.red),
+                  SizedBox(width: 10),
+                  Text(
+                    '设备未运行',
+                    style: TextStyle(fontSize: 20, color: Colors.red),
+                  ),
+                ],
+              ),
+            const SizedBox(height: 20),
             const Text(
               '接下来的操作:',
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),

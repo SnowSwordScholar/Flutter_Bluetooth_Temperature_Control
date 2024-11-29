@@ -315,3 +315,4 @@ class TemperatureProvider with ChangeNotifier {
     super.dispose();
   }
 }
+
