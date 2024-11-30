@@ -78,6 +78,15 @@ void _showInfoDialog(BuildContext context) {
                 textAlign: TextAlign.left,
               ),
               Text(
+                '注意: 由于 ESP32 蓝牙限制，只能设置 15 个温度点，设置 14 以下温度点为宜\n',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.red,
+                ),
+                textAlign: TextAlign.left,
+              ),
+              Text(
                 '指示灯提示：',
                 style: TextStyle(
                   fontSize: 18,
