@@ -63,40 +63,76 @@ void _showInfoDialog(BuildContext context) {
     context: context,
     builder: (BuildContext context) {
       return AlertDialog(
-        title: const Text('使用指南：'),
-        content: const Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start, // 确保所有文本居左对齐
-          children: <Widget>[
-            Text(
-              '等待连接：两灯交替闪烁\n'
-              '连接成功：两灯常量\n'
-              '接收成功：D5 快速闪烁\n'
-              '执行中：两灯交替呼吸\n'
-              '执行中但失去蓝牙连接：D5呼吸\n'
-              '长按三秒 BOOT 直接启动\n'
-              '长按五秒清除数据\n\n',
-
-            ),
-            Text(
-              '关于本项目\n',
-              style: TextStyle(fontWeight: FontWeight.bold), // 加粗文本
-
-            ),
-            Text(
-              'GitHub: https://github.com/SnowSwordScholar/Flutter_Bluetooth_Temperature_Control\n\n'
-              'SnowSwordScholar 用  ❤️ 创作\n\n'
-              '老师给我平时分打满分呗 ヾ(≧▽≦*)o',
-
-            ),
-          ],
+        title: const Text(
+          '使用指南：',
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        ),
+        content: const SingleChildScrollView( // 添加可滚动的视图
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children:  <Widget>[
+              Text(
+                '授予权限 -> 打开右下角蓝牙图标选择设备 -> 设置温度点并保存 -> 开始运行\n',
+                style: TextStyle(fontSize: 16),
+                textAlign: TextAlign.left,
+              ),
+              Text(
+                '指示灯提示：',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+                textAlign: TextAlign.left,
+              ),
+              Text(
+                '\n等待连接: 两灯交替闪烁\n'
+                '连接成功：两灯常量\n'
+                '接收成功: D5 快速闪烁\n'
+                '执行中：两灯交替呼吸\n'
+                '执行中但失去蓝牙连接: D5呼吸\n'
+                '执行结束: D4快速闪烁\n',
+                style: TextStyle(fontSize: 16),
+                textAlign: TextAlign.left,
+              ),
+              Text(
+                '用户按键定义：',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+                textAlign: TextAlign.left,
+              ),
+              Text(
+                '\n长按三秒 BOOT 键，按照上次设置启动\n'
+                '长按十秒 BOOT 键，清除设置的数据\n',
+                style: TextStyle(fontSize: 16),
+                textAlign: TextAlign.left,
+              ),
+              Text(
+                '关于本项目：',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+                textAlign: TextAlign.left,
+              ),
+              Text(
+                '\nGitHub: https://github.com/SnowSwordScholar/Flutter_Bluetooth_Temperature_Control\n\n'
+                'SnowSwordScholar 用  ❤️ 创作\n\n\n\n\n\n\n\n\n'
+                '老师，请多给我打点平时分呗 ヾ(≧▽≦*)o',
+                style: TextStyle(fontSize: 16),
+                textAlign: TextAlign.left,
+              ),
+            ],
+          ),
         ),
         actions: [
           TextButton(
             onPressed: () {
               Navigator.of(context).pop();
             },
-            child: const Text('关闭'),
+            child: const Text('关闭', style: TextStyle(fontSize: 16)), // 假设关闭按钮字体大小也为16
           ),
         ],
       );
