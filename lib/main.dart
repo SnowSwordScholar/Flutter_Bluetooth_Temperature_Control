@@ -80,7 +80,7 @@ class _MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: '温控管理APP',
+      title: '蓝牙温控',
       theme: ThemeData.light(),
       darkTheme: ThemeData.dark(),
       home: _permissionsGranted
