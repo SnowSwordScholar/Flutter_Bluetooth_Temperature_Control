@@ -17,4 +17,4 @@
 
 
 嵌入式代码在：
-https://github.com/SnowSwordScholar/ESP_BlueT_Temp_Conctol
+https://github.com/SnowSwordScholar/ESP_Bluetooth_Temp_Conctol
